@@ -1,18 +1,20 @@
+from typing import Tuple
+
 from langchain.prompts.prompt import PromptTemplate
 from langchain_openai import ChatOpenAI
 import os
 from third_parties.linkedin import scrape_linkedin_profile
 from agents.linkedin_lookup import lookup as linkedin_lookup_agent
-from output_parsers import summary_parser
+from output_parsers import summary_parser, Summary
 
 
 # Function to create an icebreaker with LinkedIn data
-def ice_break_with(name: str) -> str:
+def ice_break_with(name: str) -> Tuple[Summary, str]:
     # Look up the LinkedIn username using the provided name
     linkedin_username = linkedin_lookup_agent(name=name)
     # Scrape the LinkedIn profile data using the username (mock data used for demonstration)
     linkedin_data = scrape_linkedin_profile(
-        linkedin_profile_url=linkedin_username, mock=True
+        linkedin_profile_url=linkedin_username, mock=False
     )
 
     # Define the summary template
@@ -36,9 +38,9 @@ def ice_break_with(name: str) -> str:
     # Create a processing chain using the prompt template and the LLM
     chain = summary_prompt_template | llm | summary_parser
     # Invoke the chain with the LinkedIn data
-    res = chain.invoke(input={"information": linkedin_data})
+    res: Summary = chain.invoke(input={"information": linkedin_data})
 
-    print(res)
+    return res, linkedin_data.get("profile_pic_url")
 
 
 # Main entry point of the script
